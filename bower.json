@@ -1,0 +1,13 @@
+{
+    "name": "Angularjs-Hustle-Module",
+    "version": "0.0.1",
+    "private": true,
+    "keywords": ["hustle", "angularjs"],
+    "dependencies": {
+        "angular": null,
+        "hustle": "https://github.com/orthecreedence/hustle.git"
+    },
+    "devDependencies": {
+        "angular-mocks": null
+    }
+}
