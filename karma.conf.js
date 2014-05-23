@@ -16,6 +16,7 @@ module.exports = function(config) {
         files: [
             'lib/angular/angular.js',
             'lib/angular-mocks/angular-mocks.js',
+            'lib/hustle/hustle.js',
             'hustle.module.js',
             'test/**/*.js'
         ],

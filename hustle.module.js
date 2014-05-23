@@ -37,7 +37,7 @@
             return deferred.promise;
         };
 
-        var subscribeTo = function(callback, tube, delay) {
+        var register = function(callback, tube, delay) {
             var callCallbackAndDeleteItemFromQ = function(job) {
                 callback.call(this, job);
                 hustle.Queue.delete(job.id);
@@ -67,15 +67,15 @@
                     });
                 };
 
-                var subscribe = function(callback, tube, delay) {
+                var registerConsumer = function(callback, tube, delay) {
                     return getHustle().then(function() {
-                        return subscribeTo(callback, tube, delay);
+                        return register(callback, tube, delay);
                     });
                 };
 
                 return {
                     "publish": publish,
-                    "subscribe": subscribe
+                    "registerConsumer": registerConsumer
                 };
             }
         ];
