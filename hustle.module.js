@@ -39,8 +39,9 @@
 
         var register = function(callback, tube, delay) {
             var callCallbackAndDeleteItemFromQ = function(job) {
-                callback.call(this, job);
-                hustle.Queue.delete(job.id);
+                $q.when(callback.call(this, job)).then(function() {
+                    hustle.Queue.delete(job.id);
+                });
             };
 
             return new hustle.Queue.Consumer(callCallbackAndDeleteItemFromQ, {
