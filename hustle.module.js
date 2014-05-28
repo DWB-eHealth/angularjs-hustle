@@ -2,7 +2,7 @@
     angular.module('hustle', []).provider('$hustle', function() {
         var self = this;
         var hustle;
-        var retryStrategy;
+        var failureStrategy;
         var $q;
 
         var getHustle = function() {
@@ -52,7 +52,7 @@
                     hustle.Queue.delete(job.id);
                 }).
                 catch (function() {
-                    return retryStrategy(job);
+                    return failureStrategy(job);
                 });
             };
 
@@ -62,14 +62,14 @@
             });
         };
 
-        self.init = function(db_name, db_version, tubes, retryStrategyFactory) {
+        self.init = function(db_name, db_version, tubes, failureStrategyFactory) {
             hustle = new Hustle({
                 "db_name": db_name,
                 "db_version": db_version,
                 "tubes": tubes
             });
 
-            retryStrategy = retryStrategyFactory.create(hustle);
+            failureStrategy = failureStrategyFactory.create(hustle);
         };
 
         self.$get = ['$q', '$rootScope',
