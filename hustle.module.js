@@ -40,10 +40,20 @@
 
         var register = function(callback, tube, delay) {
             var callCallbackAndDeleteItemFromQ = function(job) {
-                $q.when(callback.call(this, job)).then(function() {
+                var callCallback = function() {
+                    try {
+                        return callback.call(this, job);
+                    } catch (ex) {
+                        return $q.reject();
+                    }
+                };
+
+                $q.when(callCallback()).then(function() {
                     hustle.Queue.delete(job.id);
                 }).
-                catch (retryStrategy);
+                catch (function() {
+                    return retryStrategy(job);
+                });
             };
 
             return new hustle.Queue.Consumer(callCallbackAndDeleteItemFromQ, {
