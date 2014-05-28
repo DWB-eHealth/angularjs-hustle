@@ -2,6 +2,7 @@
     angular.module('hustle', []).provider('$hustle', function() {
         var self = this;
         var hustle;
+        var retryStrategy;
         var $q;
 
         var getHustle = function() {
@@ -41,7 +42,8 @@
             var callCallbackAndDeleteItemFromQ = function(job) {
                 $q.when(callback.call(this, job)).then(function() {
                     hustle.Queue.delete(job.id);
-                });
+                }).
+                catch (retryStrategy);
             };
 
             return new hustle.Queue.Consumer(callCallbackAndDeleteItemFromQ, {
@@ -50,12 +52,14 @@
             });
         };
 
-        self.init = function(db_name, db_version, tubes) {
+        self.init = function(db_name, db_version, tubes, retryStrategyFactory) {
             hustle = new Hustle({
                 "db_name": db_name,
                 "db_version": db_version,
                 "tubes": tubes
             });
+
+            retryStrategy = retryStrategyFactory(hustle);
         };
 
         self.$get = ['$q', '$rootScope',
