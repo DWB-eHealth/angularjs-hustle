@@ -64,7 +64,7 @@
 
                 var publish = function(message, tube) {
                     return getHustle().then(function() {
-                        publishMessage(message, tube);
+                        return publishMessage(message, tube);
                     });
                 };
 
