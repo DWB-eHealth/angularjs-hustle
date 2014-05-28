@@ -69,7 +69,7 @@
                 "tubes": tubes
             });
 
-            retryStrategy = retryStrategyFactory(hustle);
+            retryStrategy = retryStrategyFactory.create(hustle);
         };
 
         self.$get = ['$q', '$rootScope',
