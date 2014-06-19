@@ -41,8 +41,8 @@
                     return $q.when(callCallback()).then(function() {
                         hustle.Queue.delete(job.id);
                     }).
-                    catch (function() {
-                        return failureStrategy(job);
+                    catch (function(failureMessage) {
+                        return failureStrategy(job, failureMessage);
                     });
                 };
 
