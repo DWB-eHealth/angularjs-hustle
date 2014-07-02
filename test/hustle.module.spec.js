@@ -1,16 +1,15 @@
 describe("hustle angular provider", function() {
-    var hustle, rootScope, q;
-    var FailureStrategy = function() {
-        this.create = function() {
-
-        }
-    };
-
+    var hustle, rootScope, q, app;
     beforeEach(function() {
-        var app = angular.module("testModule", ["hustle"]);
+        if (app) return;
+        app = angular.module("testModule", ["hustle"]);
         app.config(["$hustleProvider",
             function($hustleProvider) {
-                $hustleProvider.init("hustle", 1, ["testTube"], new FailureStrategy());
+                $hustleProvider.init("hustle", 1, ["testTube"], {
+                    "create": function() {
+                        return function() {};
+                    }
+                });
             }
         ]);
 
@@ -21,16 +20,32 @@ describe("hustle angular provider", function() {
         hustle = $injector.get('$hustle');
     });
 
-    it("publish and consume a mesage", function(done) {
-        hustle.registerConsumer(function(message) {
-            console.log(message);
-        }, "testTube").then(function(consumer) {
-            console.log("registering");
-            consumer.start();
-            done();
-        }, function() {
-            console.log("erro");
+    it("should consume messages one at a time in order", function(done) {
+        var currentIndex = 1;
+        var numberOfTestCases = 40;
+        var someFunction = function(message) {
+            var defered = q.defer();
+            expect(message.data).toEqual(currentIndex);
+            if (currentIndex >= numberOfTestCases)
+                done();
+            currentIndex++;
+            setTimeout(function() {
+                defered.resolve();
+            }, 100);
+            return defered.promise;
+        };
+
+        hustle.registerConsumer(someFunction, "testTube").then(function(consumer) {
+            var publish = function(n) {
+                return function() {
+                    return hustle.publish(n, "testTube")
+                }
+            };
+            var p = publish(1)();
+            for (var i = 2; i <= numberOfTestCases; i++) {
+                p = p.then(publish(i));
+            }
+            p.then(consumer.start);
         });
-        hustle.publish("test message", "testTube");
     });
 });
