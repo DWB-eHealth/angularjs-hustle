@@ -55,8 +55,6 @@
                 hustle.Queue.reserve({
                     "tube": tube
                 }).then(reserveSuccess);
-
-                if (!options.skip_recurse) setTimeout(poll, delay);
             };
 
             var start = function() {

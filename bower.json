@@ -5,7 +5,7 @@
     "keywords": ["hustle", "angularjs"],
     "dependencies": {
         "angular": null,
-        "hustle": "https://github.com/orthecreedence/hustle.git"
+        "hustle": "https://github.com/DWB-eHealth/hustle.git"
     },
     "devDependencies": {
         "angular-mocks": null

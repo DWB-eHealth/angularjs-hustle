@@ -15,7 +15,7 @@ module.exports = function(config) {
         // list of files / patterns to load in the browser
         files: [
             'lib/angular/angular.js',
-            'lib/angular-mocks/angular-mocks.js',
+            // 'lib/angular-mocks/angular-mocks.js',
             'lib/hustle/hustle.js',
             'hustle.module.js',
             'test/**/*.js'
@@ -67,6 +67,6 @@ module.exports = function(config) {
 
         // Continuous Integration mode
         // if true, it capture browsers, run tests and exit
-        singleRun: true
+        singleRun: false
     });
 };
