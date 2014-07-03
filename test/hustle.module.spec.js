@@ -31,7 +31,7 @@ describe("hustle angular provider", function() {
 
     it("should consume messages one at a time in order", function(done) {
         var currentIndex = 1;
-        var numberOfTestCases = 40;
+        var numberOfTestCases = 10;
 
         var someBlockingCall = function(defered) {
             setTimeout(function() {

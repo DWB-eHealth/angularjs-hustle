@@ -8,7 +8,7 @@
             coptions = coptions || {};
             var tube = coptions.tube ? coptions.tube : 'default';
             var delay = coptions.delay ? coptions.delay : 100;
-            var do_stop = false;
+            var do_stop = true;
 
             var poll = function(options) {
                 options = options || {};
@@ -22,11 +22,7 @@
                 }
 
                 var pollAgain = function() {
-                    setTimeout(function() {
-                        poll({
-                            skip_recurse: true
-                        });
-                    }, 0);
+                    setTimeout(poll, delay);
                 };
 
                 var callCallbackAndDeleteItemFromQ = function(job, callback) {
@@ -48,13 +44,13 @@
 
                 var reserveSuccess = function(item) {
                     if (!item) return;
-                    callCallbackAndDeleteItemFromQ(item, fn).
-                    finally(pollAgain);
+                    return callCallbackAndDeleteItemFromQ(item, fn);
                 };
 
-                hustle.Queue.reserve({
+                $q.when(hustle.Queue.reserve({
                     "tube": tube
-                }).then(reserveSuccess);
+                })).then(reserveSuccess).
+                finally(pollAgain);
             };
 
             var start = function() {
@@ -70,7 +66,6 @@
                 return true;
             };
 
-            setTimeout(poll, delay);
 
             this.start = start;
             this.stop = stop;
