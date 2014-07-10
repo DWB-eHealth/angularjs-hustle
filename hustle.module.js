@@ -54,6 +54,7 @@
             };
 
             var start = function() {
+                console.debug("hustle module consumer start", do_stop);
                 if (!do_stop) return false;
                 do_stop = false;
                 setTimeout(poll, delay);
@@ -61,6 +62,7 @@
             };
 
             var stop = function() {
+                console.debug("hustle module consumer stop", do_stop);
                 if (do_stop) return false;
                 do_stop = true;
                 return true;
