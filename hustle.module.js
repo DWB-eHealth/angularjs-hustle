@@ -35,9 +35,13 @@
                     };
 
                     return $q.when(callCallback()).then(function() {
+                        if (chrome && chrome.runtime && chrome.runtime.sendMessage)
+                            chrome.runtime.sendMessage(job.data.type + "Done");
                         hustle.Queue.delete(job.id);
                     }).
-                    catch (function(failureMessage) {
+                    catch(function(failureMessage) {
+                        if (chrome && chrome.runtime && chrome.runtime.sendMessage)
+                            chrome.runtime.sendMessage(job.data.type + "Failed");
                         return failureStrategy(job, failureMessage);
                     });
                 };
