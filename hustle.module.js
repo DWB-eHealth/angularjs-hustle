@@ -35,13 +35,21 @@
                     };
 
                     return $q.when(callCallback()).then(function() {
-                        if (chrome && chrome.runtime && chrome.runtime.sendMessage)
-                            chrome.runtime.sendMessage(job.data.type + "Done");
+                        if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
+                            chrome.runtime.sendMessage({
+                                message: job.data.type + "Done",
+                                requestId: job.data.requestId
+                            });
+                        }
                         hustle.Queue.delete(job.id);
                     }).
                     catch(function(failureMessage) {
-                        if (chrome && chrome.runtime && chrome.runtime.sendMessage)
-                            chrome.runtime.sendMessage(job.data.type + "Failed");
+                        if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
+                            chrome.runtime.sendMessage({
+                                message: job.data.type + "Failed",
+                                requestId: job.data.requestId
+                            });
+                        }
                         return failureStrategy(job, failureMessage);
                     });
                 };
