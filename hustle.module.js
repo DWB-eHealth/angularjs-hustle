@@ -1,9 +1,7 @@
 (function(angular) {
     angular.module('hustle', []).provider('$hustle', function() {
         var self = this;
-        var hustle;
-        var failureStrategy;
-        var $q;
+        var hustle, onSuccess, onFailure, $q;
         var Consumer = function(fn, coptions) {
             coptions = coptions || {};
             var tube = coptions.tube ? coptions.tube : 'default';
@@ -35,22 +33,13 @@
                     };
 
                     return $q.when(callCallback()).then(function() {
-                        if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
-                            chrome.runtime.sendMessage({
-                                message: job.data.type + "Done",
-                                requestId: job.data.requestId
-                            });
-                        }
+                        if (onSuccess)
+                            onSuccess(job);
                         hustle.Queue.delete(job.id);
                     }).
                     catch(function(failureMessage) {
-                        if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
-                            chrome.runtime.sendMessage({
-                                message: job.data.type + "Failed",
-                                requestId: job.data.requestId
-                            });
-                        }
-                        return failureStrategy(job, failureMessage);
+                        if (onFailure)
+                            onFailure(job, failureMessage, hustle.Queue);
                     });
                 };
 
@@ -87,7 +76,6 @@
             return this;
         };
 
-
         var getHustle = function() {
             var deferred = $q.defer();
             if (!hustle) {
@@ -110,18 +98,17 @@
         var register = function(callback, tube, delay) {
             return new Consumer(callback, {
                 "tube": tube,
-                "delay": delay
+                "delay": delay,
             });
         };
 
-        self.init = function(db_name, db_version, tubes, failureStrategyFactory) {
+        self.init = function(db_name, db_version, tubes) {
             hustle = new Hustle({
                 "db_name": db_name,
                 "db_version": db_version,
                 "tubes": tubes
             });
             hustle.promisify();
-            failureStrategy = failureStrategyFactory.create(hustle);
         };
 
         self.$get = ['$q', '$rootScope',
@@ -140,9 +127,15 @@
                     });
                 };
 
+                var registerInterceptor = function(interceptor) {
+                    onSuccess = interceptor.onSuccess;
+                    onFailure = interceptor.onFailure;
+                };
+
                 return {
                     "publish": publish,
-                    "registerConsumer": registerConsumer
+                    "registerConsumer": registerConsumer,
+                    "registerInterceptor": registerInterceptor
                 };
             }
         ];
