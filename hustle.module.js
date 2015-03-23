@@ -1,12 +1,14 @@
 (function(angular) {
     angular.module('hustle', []).provider('$hustle', function() {
         var self = this;
-        var hustle, onSuccess, onFailure, $q;
+        var hustle, onSuccess, onFailure, shouldRetry, $q;
         var Consumer = function(fn, coptions) {
             coptions = coptions || {};
             var tube = coptions.tube ? coptions.tube : 'default';
             var delay = coptions.delay ? coptions.delay : 100;
+            var retryDelay = coptions.retryDelay ? coptions.retryDelay : 15000;
             var do_stop = true;
+            var do_retry = false;
 
             var poll = function(options) {
                 options = options || {};
@@ -20,7 +22,12 @@
                 }
 
                 var pollAgain = function() {
-                    setTimeout(poll, delay);
+                    if (do_retry) {
+                        setTimeout(poll, retryDelay);
+                        do_retry = false;
+                    } else {
+                        setTimeout(poll, delay);
+                    }
                 };
 
                 var callCallbackAndDeleteItemFromQ = function(job, callback) {
@@ -38,8 +45,15 @@
                         hustle.Queue.delete(job.id);
                     }).
                     catch(function(failureMessage) {
-                        if (onFailure)
-                            onFailure(job, failureMessage, hustle.Queue);
+                        if (shouldRetry) {
+                            if (shouldRetry(job, failureMessage)) {
+                                do_retry = true;
+                                hustle.Queue.release(job.id);
+                            } else {
+                                hustle.Queue.bury(job.id);
+                            }
+                        } else if (onFailure)
+                            onFailure(job, failureMessage);
                     });
                 };
 
@@ -68,7 +82,6 @@
                 do_stop = true;
                 return true;
             };
-
 
             this.start = start;
             this.stop = stop;
@@ -130,6 +143,7 @@
                 var registerInterceptor = function(interceptor) {
                     onSuccess = interceptor.onSuccess;
                     onFailure = interceptor.onFailure;
+                    shouldRetry = interceptor.shouldRetry;
                 };
 
                 return {

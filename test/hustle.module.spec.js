@@ -18,7 +18,8 @@ describe("hustle angular provider", function() {
 
         interceptor = {
             "onSuccess": jasmine.createSpy("onSuccess"),
-            "onFailure": jasmine.createSpy("onFailure")
+            "onFailure": jasmine.createSpy("onFailure"),
+            "shouldRetry": undefined
         };
 
         hustle.registerInterceptor(interceptor);
@@ -77,7 +78,7 @@ describe("hustle angular provider", function() {
                 done();
             }
             return defered.promise;
-        };        
+        };
 
         hustle.registerConsumer(consumerFunction, "testTube2")
             .then(function(consumer) {
@@ -87,7 +88,7 @@ describe("hustle angular provider", function() {
             });
     });
 
-    it("should call onFailure if the interceptor is registered", function(done) {
+    it("should call onFailure if the interceptor is registered and shouldRetry is undefined", function(done) {
 
         var someBlockingCall = function(defered) {
             setTimeout(function() {
@@ -111,5 +112,32 @@ describe("hustle angular provider", function() {
                     .then(publish("end", "testTube2"));
                 consumer.start();
             });
+    });
+
+    it("should call shouldRetry if the interceptor is registered and shouldRetry is defined", function(done) {
+
+        var someBlockingCall = function(defered) {
+            setTimeout(function() {
+                defered.reject();
+            }, 100);
+        };
+
+        var consumerFunction = function(message) {
+            var defered = q.defer();
+            someBlockingCall(defered);
+            if (message.data === "end") {
+                expect(interceptor.shouldRetry).toHaveBeenCalled();
+                done();
+            }
+            return defered.promise;
+        };
+
+        interceptor.shouldRetry = jasmine.createSpy("shouldRetry");
+        hustle.registerInterceptor(interceptor);
+
+        hustle.registerConsumer(consumerFunction, "testTube2").then(function(consumer) {
+            publish("foo", "testTube2")().then(publish("end", "testTube2"));
+            consumer.start();
+        });
     });
 });
