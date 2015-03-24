@@ -6,9 +6,10 @@
             coptions = coptions || {};
             var tube = coptions.tube ? coptions.tube : 'default';
             var delay = coptions.delay ? coptions.delay : 100;
-            var retryDelay = coptions.retryDelay ? coptions.retryDelay : 15000;
+            var retryDelayConfig = coptions.retryDelayConfig;
             var do_stop = true;
             var do_retry = false;
+            var retryDelay = 100;
 
             var poll = function(options) {
                 options = options || {};
@@ -48,6 +49,7 @@
                         if (shouldRetry) {
                             if (shouldRetry(job, failureMessage)) {
                                 do_retry = true;
+                                retryDelay = retryDelayConfig && retryDelayConfig[job.releases] ? retryDelayConfig[job.releases] : retryDelay;
                                 hustle.Queue.release(job.id);
                             } else {
                                 hustle.Queue.bury(job.id);
@@ -108,10 +110,11 @@
             return $q.when(putPromise);
         };
 
-        var register = function(callback, tube, delay) {
+        var register = function(callback, tube, delay, retryDelayConfig) {
             return new Consumer(callback, {
                 "tube": tube,
                 "delay": delay,
+                "retryDelayConfig": retryDelayConfig
             });
         };
 
@@ -134,9 +137,9 @@
                     });
                 };
 
-                var registerConsumer = function(callback, tube, delay) {
+                var registerConsumer = function(callback, tube, delay, retryDelayConfig) {
                     return getHustle().then(function() {
-                        return register(callback, tube, delay);
+                        return register(callback, tube, delay, retryDelayConfig);
                     });
                 };
 
