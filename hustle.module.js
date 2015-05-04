@@ -137,6 +137,19 @@
                     });
                 };
 
+                var getCount = function(tube) {
+                    return getHustle().then(function() {
+                        return hustle.Queue.count_ready(tube, {
+                            'success': function(count) {
+                                return count;
+                            },
+                            'failure': function(e) {
+
+                            }
+                        });
+                    });
+                };
+
                 var registerConsumer = function(callback, tube, delay, retryDelayConfig) {
                     return getHustle().then(function() {
                         return register(callback, tube, delay, retryDelayConfig);
@@ -152,7 +165,8 @@
                 return {
                     "publish": publish,
                     "registerConsumer": registerConsumer,
-                    "registerInterceptor": registerInterceptor
+                    "registerInterceptor": registerInterceptor,
+                    "getCount": getCount
                 };
             }
         ];
