@@ -150,6 +150,19 @@
                     });
                 };
 
+                var getReservedCount = function() {
+                    return getHustle().then(function() {
+                        return hustle.Queue.count_reserved({
+                            'success': function(count) {
+                                return count;
+                            },
+                            'failure': function(e) {
+
+                            }
+                        });
+                    });
+                };
+
                 var registerConsumer = function(callback, tube, delay, retryDelayConfig) {
                     return getHustle().then(function() {
                         return register(callback, tube, delay, retryDelayConfig);
@@ -166,7 +179,8 @@
                     "publish": publish,
                     "registerConsumer": registerConsumer,
                     "registerInterceptor": registerInterceptor,
-                    "getCount": getCount
+                    "getCount": getCount,
+                    "getReservedCount": getReservedCount
                 };
             }
         ];
