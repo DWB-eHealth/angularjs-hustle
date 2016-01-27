@@ -163,6 +163,12 @@
                     });
                 };
 
+                var cleanupAbandonedItems = function() {
+                    return getHustle().then(function() {
+                        return hustle.Queue.cleanup_abandoned_items();
+                    });
+                };
+
                 var registerConsumer = function(callback, tube, delay, retryDelayConfig) {
                     return getHustle().then(function() {
                         return register(callback, tube, delay, retryDelayConfig);
@@ -180,7 +186,8 @@
                     "registerConsumer": registerConsumer,
                     "registerInterceptor": registerInterceptor,
                     "getCount": getCount,
-                    "getReservedCount": getReservedCount
+                    "getReservedCount": getReservedCount,
+                    "cleanupAbandonedItems": cleanupAbandonedItems
                 };
             }
         ];
