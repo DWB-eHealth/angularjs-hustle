@@ -6,6 +6,7 @@
     "devDependencies": {
         "gulp-protractor": "*",
         "gulp-jshint": "*",
+        "jshint": "*",
         "jshint-stylish": "*",
         "yargs": "*",
         "gulp-less": "~1.2.3",
@@ -13,6 +14,8 @@
         "path": "~0.4.9",
         "watch": "~0.9.0",
 
+        "requirejs": "*",
+        "karma": "*",
         "karma-jasmine": "0.2.0",
         "karma-requirejs": "*",
         "karma-chrome-launcher": "*",
