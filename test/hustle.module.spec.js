@@ -1,16 +1,17 @@
 describe("hustle angular provider", function() {
-    var hustle, rootScope, q, app, interceptor, times = 0;
+    var hustle, rootScope, q, app, interceptor, times = 0, comparator;
 
     beforeEach(function() {
         if (app) return;
+        comparator = jasmine.createSpy("comparator");
         app = angular.module("testModule", ["hustle"]);
         app.config(["$hustleProvider",
             function($hustleProvider) {
-                $hustleProvider.init("hustle", 1, ["testTube", "testTube2"]);
+                $hustleProvider.init("hustle", 1, ["testTube", "testTube2"], comparator);
             }
         ]);
 
-        var $injector = angular.bootstrap(angular.element(document.querySelector('head')), ['testModule']);
+        var $injector = angular.bootstrap(document.querySelector('head'), ['testModule']);
 
         q = $injector.get('$q');
         rootScope = $injector.get('$rootScope');
@@ -45,6 +46,7 @@ describe("hustle angular provider", function() {
         var consumerFunction = function(message) {
             var defered = q.defer();
             expect(message.data).toEqual(currentIndex);
+            expect(comparator).toHaveBeenCalled();
             if (currentIndex >= numberOfTestCases)
                 done();
             currentIndex++;

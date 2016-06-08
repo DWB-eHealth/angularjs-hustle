@@ -1,7 +1,7 @@
 (function(angular) {
     angular.module('hustle', []).provider('$hustle', function() {
         var self = this;
-        var hustle, onSuccess, onFailure, shouldRetry, $q;
+        var hustle, onSuccess, onFailure, shouldRetry, $q, comparator;
         var Consumer = function(fn, coptions) {
             coptions = coptions || {};
             var tube = coptions.tube ? coptions.tube : 'default';
@@ -104,9 +104,10 @@
         };
 
         var publishMessage = function(message, tube) {
-            var putPromise = hustle.Queue.put(message, {
-                "tube": tube,
-            });
+            var options = {"tube": tube};
+            if (comparator)
+                options.comparator = comparator;
+            var putPromise = hustle.Queue.put(message, options);
             return $q.when(putPromise);
         };
 
@@ -118,13 +119,14 @@
             });
         };
 
-        self.init = function(db_name, db_version, tubes) {
+        self.init = function(db_name, db_version, tubes, comparatorFn) {
             hustle = new Hustle({
                 "db_name": db_name,
                 "db_version": db_version,
                 "tubes": tubes
             });
             hustle.promisify();
+            comparator = comparatorFn;
         };
 
         self.$get = ['$q', '$rootScope',
