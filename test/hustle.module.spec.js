@@ -2,6 +2,7 @@ describe("hustle angular provider", function() {
     var hustle, rootScope, q, app, interceptor, times = 0, comparator;
 
     beforeEach(function() {
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 25000;
         if (app) return;
         comparator = jasmine.createSpy("comparator").and.callFake(function (a,b) {
             return a === b;
