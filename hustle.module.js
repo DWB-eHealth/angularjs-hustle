@@ -103,9 +103,9 @@
             return deferred.promise;
         };
 
-        var publishMessage = function(message, tube) {
+        var publishMessage = function(message, tube, publishOnce) {
             var options = {"tube": tube};
-            if (comparator)
+            if (comparator && publishOnce)
                 options.comparator = comparator;
             var putPromise = hustle.Queue.put(message, options);
             return $q.when(putPromise);
@@ -133,10 +133,12 @@
             function(q, $rootScope) {
                 $q = q;
 
-                var publish = function(message, tube) {
-                    return getHustle().then(function() {
-                        return publishMessage(message, tube);
-                    });
+                var publish = function(once) {
+                    return function (message, tube) {
+                        return getHustle().then(function () {
+                            return publishMessage(message, tube, once);
+                        });
+                    };
                 };
 
                 var getCount = function(tube) {
@@ -184,7 +186,8 @@
                 };
 
                 return {
-                    "publish": publish,
+                    "publish": publish(false),
+                    "publishOnce": publish(true),
                     "registerConsumer": registerConsumer,
                     "registerInterceptor": registerInterceptor,
                     "getCount": getCount,

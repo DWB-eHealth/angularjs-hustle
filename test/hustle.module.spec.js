@@ -3,11 +3,13 @@ describe("hustle angular provider", function() {
 
     beforeEach(function() {
         if (app) return;
-        comparator = jasmine.createSpy("comparator");
+        comparator = jasmine.createSpy("comparator").and.callFake(function (a,b) {
+            return a === b;
+        });
         app = angular.module("testModule", ["hustle"]);
         app.config(["$hustleProvider",
             function($hustleProvider) {
-                $hustleProvider.init("hustle", 1, ["testTube", "testTube2"], comparator);
+                $hustleProvider.init("hustle", 1, ["testTube", "testTube2", "testTubeForUnique"], comparator);
             }
         ]);
 
@@ -46,7 +48,6 @@ describe("hustle angular provider", function() {
         var consumerFunction = function(message) {
             var defered = q.defer();
             expect(message.data).toEqual(currentIndex);
-            expect(comparator).toHaveBeenCalled();
             if (currentIndex >= numberOfTestCases)
                 done();
             currentIndex++;
@@ -62,6 +63,27 @@ describe("hustle angular provider", function() {
             }
             p.then(consumer.start);
         });
+    });
+
+    it("should publish only unique jobs", function(done) {
+        var tubeName = "testTubeForUnique";
+        var publishOnce = function(n, tube) {
+            return function() {
+                return hustle.publishOnce(n, tube);
+            };
+        };
+        var checkCount = function () {
+            hustle.getCount(tubeName).then(function (count) {
+                expect(count).toEqual(2);
+                expect(comparator).toHaveBeenCalled();
+                done();
+            });
+        };
+
+        publishOnce("job4", tubeName)()
+            .then(publishOnce("job4", tubeName))
+            .then(publishOnce("job5", tubeName))
+            .then(checkCount);
     });
 
     it("should call onSuccess if the interceptor is registered", function(done) {
