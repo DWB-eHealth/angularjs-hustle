@@ -1,11 +1,11 @@
 {
     "name": "Angularjs-Hustle-Module",
-    "version": "0.0.1",
+    "version": "0.3.0",
     "private": true,
     "keywords": ["hustle", "angularjs"],
     "dependencies": {
         "angular": null,
-        "hustle": "https://github.com/DWB-eHealth/hustle.git"
+        "hustle": "https://github.com/DWB-eHealth/hustle.git#v0.3.0"
     },
     "devDependencies": {
         "angular-mocks": null
