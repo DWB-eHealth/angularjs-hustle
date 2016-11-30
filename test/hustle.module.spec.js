@@ -23,7 +23,8 @@ describe("hustle angular provider", function() {
         interceptor = {
             "onSuccess": jasmine.createSpy("onSuccess"),
             "onFailure": jasmine.createSpy("onFailure"),
-            "shouldRetry": undefined
+            "shouldRetry": undefined,
+            "onPublish": jasmine.createSpy("onPublish")
         };
 
         hustle.registerInterceptor(interceptor);
@@ -163,6 +164,17 @@ describe("hustle angular provider", function() {
         hustle.registerConsumer(consumerFunction, "testTube2").then(function(consumer) {
             publish("foo", "testTube2")().then(publish("end", "testTube2"));
             consumer.start();
+        });
+    });
+
+    it("should call onPublish when a new job is added to the queue", function(done) {
+        var consumerFunction = function() {};
+
+        hustle.registerConsumer(consumerFunction, "testTube2").then(function() {
+            publish("foo", "testTube2");
+
+            expect(interceptor.onPublish).toHaveBeenCalled();
+            done();
         });
     });
 });

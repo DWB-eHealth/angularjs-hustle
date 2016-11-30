@@ -1,7 +1,7 @@
 (function(angular) {
     angular.module('hustle', []).provider('$hustle', function() {
         var self = this;
-        var hustle, onSuccess, onFailure, shouldRetry, $q, comparator;
+        var hustle, onSuccess, onFailure, shouldRetry, onPublish, $q, comparator;
         var Consumer = function(fn, coptions) {
             coptions = coptions || {};
             var tube = coptions.tube ? coptions.tube : 'default';
@@ -40,10 +40,10 @@
                         }
                     };
 
-                    return $q.when(callCallback()).then(function() {
-                        if (onSuccess)
-                            onSuccess(job);
-                        hustle.Queue.delete(job.id);
+                    return $q.when(callCallback()).then(function () {
+                        return hustle.Queue.delete(job.id).then(function () {
+                            if (onSuccess) onSuccess(job);
+                        });
                     }).
                     catch(function(failureMessage) {
                         if (shouldRetry) {
@@ -107,8 +107,9 @@
             var options = {"tube": tube};
             if (comparator && publishOnce)
                 options.comparator = comparator;
-            var putPromise = hustle.Queue.put(message, options);
-            return $q.when(putPromise);
+            return hustle.Queue.put(message, options).then(function (job) {
+                if(onPublish) onPublish(job);
+            });
         };
 
         var register = function(callback, tube, delay, retryDelayConfig) {
@@ -183,6 +184,7 @@
                     onSuccess = interceptor.onSuccess;
                     onFailure = interceptor.onFailure;
                     shouldRetry = interceptor.shouldRetry;
+                    onPublish = interceptor.onPublish;
                 };
 
                 return {
