@@ -1,7 +1,7 @@
 (function(angular) {
     angular.module('hustle', []).provider('$hustle', function() {
         var self = this;
-        var hustle, onSuccess, onFailure, shouldRetry, onPublish, $q, comparator;
+        var hustle, onSuccess, onFailure, shouldRetry, onPublish, onReserve, $q, comparator;
         var Consumer = function(fn, coptions) {
             coptions = coptions || {};
             var tube = coptions.tube ? coptions.tube : 'default';
@@ -46,21 +46,23 @@
                         });
                     }).
                     catch(function(failureMessage) {
-                        if (shouldRetry) {
-                            if (shouldRetry(job, failureMessage)) {
-                                do_retry = true;
-                                retryDelay = retryDelayConfig && retryDelayConfig[job.releases] ? retryDelayConfig[job.releases] : retryDelay;
-                                hustle.Queue.release(job.id);
-                            } else {
-                                hustle.Queue.bury(job.id);
-                            }
-                        } else if (onFailure)
-                            onFailure(job, failureMessage);
+                        var callOnFailureCallback = function () {
+                            if (onFailure) onFailure(job, failureMessage);
+                        };
+
+                        if (shouldRetry && shouldRetry(job, failureMessage)) {
+                            do_retry = true;
+                            retryDelay = retryDelayConfig && retryDelayConfig[job.releases] ? retryDelayConfig[job.releases] : retryDelay;
+                            hustle.Queue.release(job.id).then(callOnFailureCallback);
+                        } else {
+                            hustle.Queue.bury(job.id).then(callOnFailureCallback);
+                        }
                     });
                 };
 
                 var reserveSuccess = function(item) {
                     if (!item) return;
+                    if (onReserve) onReserve();
                     return callCallbackAndDeleteItemFromQ(item, fn);
                 };
 
@@ -185,6 +187,7 @@
                     onFailure = interceptor.onFailure;
                     shouldRetry = interceptor.shouldRetry;
                     onPublish = interceptor.onPublish;
+                    onReserve = interceptor.onReserve;
                 };
 
                 return {

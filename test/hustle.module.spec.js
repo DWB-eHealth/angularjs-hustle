@@ -1,8 +1,10 @@
 describe("hustle angular provider", function() {
-    var hustle, rootScope, q, app, interceptor, times = 0, comparator;
+    var hustle, rootScope, q, app, interceptor, times = 0, comparator, stopConsumer;
 
     beforeEach(function() {
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 25000;
+        stopConsumer = null;
+
         if (app) return;
         comparator = jasmine.createSpy("comparator").and.callFake(function (a,b) {
             return a === b;
@@ -23,7 +25,7 @@ describe("hustle angular provider", function() {
         interceptor = {
             "onSuccess": jasmine.createSpy("onSuccess"),
             "onFailure": jasmine.createSpy("onFailure"),
-            "shouldRetry": undefined,
+            "shouldRetry": jasmine.createSpy("shouldRetry"),
             "onPublish": jasmine.createSpy("onPublish")
         };
 
@@ -50,15 +52,17 @@ describe("hustle angular provider", function() {
         var consumerFunction = function(message) {
             var defered = q.defer();
             expect(message.data).toEqual(currentIndex);
-            if (currentIndex >= numberOfTestCases)
+            if (currentIndex >= numberOfTestCases) {
+                stopConsumer();
                 done();
+            }
             currentIndex++;
             someBlockingCall(defered);
             return defered.promise;
         };
 
         hustle.registerConsumer(consumerFunction, "testTube").then(function(consumer) {
-
+            stopConsumer = consumer.stop;
             var p = publish(1, "testTube")();
             for (var i = 2; i <= numberOfTestCases; i++) {
                 p = p.then(publish(i, "testTube"));
@@ -101,6 +105,7 @@ describe("hustle angular provider", function() {
             someBlockingCall(defered);
             if (message.data === "end") {
                 expect(interceptor.onSuccess).toHaveBeenCalled();
+                stopConsumer();
                 done();
             }
             return defered.promise;
@@ -108,13 +113,14 @@ describe("hustle angular provider", function() {
 
         hustle.registerConsumer(consumerFunction, "testTube2")
             .then(function(consumer) {
+                stopConsumer = consumer.stop;
                 publish("foo", "testTube2")()
                     .then(publish("end", "testTube2"));
                 consumer.start();
             });
     });
 
-    it("should call onFailure if the interceptor is registered and shouldRetry is undefined", function(done) {
+    it("should call onFailure if the interceptor is registered", function(done) {
 
         var someBlockingCall = function(defered) {
             setTimeout(function() {
@@ -127,6 +133,7 @@ describe("hustle angular provider", function() {
             someBlockingCall(defered);
             if (message.data === "end") {
                 expect(interceptor.onFailure).toHaveBeenCalled();
+                stopConsumer();
                 done();
             }
             return defered.promise;
@@ -134,6 +141,7 @@ describe("hustle angular provider", function() {
 
         hustle.registerConsumer(consumerFunction, "testTube2")
             .then(function(consumer) {
+                stopConsumer = consumer.stop;
                 publish("foo", "testTube2")()
                     .then(publish("end", "testTube2"));
                 consumer.start();
@@ -154,6 +162,7 @@ describe("hustle angular provider", function() {
             if (message.data === "end") {
                 expect(interceptor.shouldRetry).toHaveBeenCalled();
                 done();
+                stopConsumer();
             }
             return defered.promise;
         };
@@ -162,6 +171,7 @@ describe("hustle angular provider", function() {
         hustle.registerInterceptor(interceptor);
 
         hustle.registerConsumer(consumerFunction, "testTube2").then(function(consumer) {
+            stopConsumer = consumer.stop;
             publish("foo", "testTube2")().then(publish("end", "testTube2"));
             consumer.start();
         });
@@ -175,6 +185,23 @@ describe("hustle angular provider", function() {
 
             expect(interceptor.onPublish).toHaveBeenCalled();
             done();
+        });
+    });
+
+    it("should call onReserve when a new job is getting processed", function(done) {
+        var consumerFunction = function() {
+            expect(interceptor.onReserve).toHaveBeenCalled();
+            stopConsumer();
+            done();
+        };
+
+        interceptor.onReserve = jasmine.createSpy("onReserve");
+        hustle.registerInterceptor(interceptor);
+
+        hustle.registerConsumer(consumerFunction, "testTube2").then(function(consumer) {
+            stopConsumer = consumer.stop;
+            publish("foo", "testTube2")();
+            consumer.start();
         });
     });
 });
