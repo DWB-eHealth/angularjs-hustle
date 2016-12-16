@@ -176,7 +176,11 @@
                     });
                 };
 
-                var rescueReservedItems = function (options) {
+                var rescueReservedItems = function (maxNumberOfTimesItemCanBeRescued, minTimeToIncrementItemRescuedCount) {
+                    var options = {
+                        maxRescueLimit: maxNumberOfTimesItemCanBeRescued,
+                        rescueTimeLimitInSeconds: minTimeToIncrementItemRescuedCount
+                    };
                     return getHustle().then(function () {
                         return hustle.Queue.rescue_reserved_items(options);
                     });
