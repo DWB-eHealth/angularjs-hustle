@@ -176,6 +176,12 @@
                     });
                 };
 
+                var rescueReservedItems = function (options) {
+                    return getHustle().then(function () {
+                        return hustle.Queue.rescue_reserved_items(options);
+                    });
+                };
+
                 var registerConsumer = function(callback, tube, delay, retryDelayConfig) {
                     return getHustle().then(function() {
                         return register(callback, tube, delay, retryDelayConfig);
@@ -197,7 +203,8 @@
                     "registerInterceptor": registerInterceptor,
                     "getCount": getCount,
                     "getReservedCount": getReservedCount,
-                    "cleanupAbandonedItems": cleanupAbandonedItems
+                    "cleanupAbandonedItems": cleanupAbandonedItems,
+                    "rescueReservedItems": rescueReservedItems
                 };
             }
         ];
