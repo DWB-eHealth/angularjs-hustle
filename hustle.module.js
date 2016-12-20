@@ -192,6 +192,10 @@
                     });
                 };
 
+                var wipe = function () {
+                    return hustle && hustle.wipe();
+                };
+
                 var registerInterceptor = function(interceptor) {
                     onSuccess = interceptor.onSuccess;
                     onFailure = interceptor.onFailure;
@@ -208,7 +212,8 @@
                     "getCount": getCount,
                     "getReservedCount": getReservedCount,
                     "cleanupAbandonedItems": cleanupAbandonedItems,
-                    "rescueReservedItems": rescueReservedItems
+                    "rescueReservedItems": rescueReservedItems,
+                    "wipe": wipe
                 };
             }
         ];
