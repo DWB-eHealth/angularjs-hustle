@@ -10,6 +10,14 @@
             var do_stop = true;
             var do_retry = false;
             var retryDelay = 100;
+            var isPollRunning = false;
+            var timeOutId;
+
+            var synchronizePoll = function (pollDelay) {
+                clearTimeout(timeOutId);
+                if (isPollRunning || do_stop) return;
+                timeOutId = setTimeout(poll, pollDelay);
+            };
 
             var poll = function(options) {
                 options = options || {};
@@ -21,13 +29,15 @@
                         return false;
                     }
                 }
+                isPollRunning = true;
 
                 var pollAgain = function() {
+                    isPollRunning = false;
                     if (do_retry) {
-                        setTimeout(poll, retryDelay);
+                        synchronizePoll(retryDelay);
                         do_retry = false;
                     } else {
-                        setTimeout(poll, delay);
+                        synchronizePoll(delay);
                     }
                 };
 
@@ -76,7 +86,7 @@
                 console.debug("hustle module consumer start", do_stop);
                 if (!do_stop) return false;
                 do_stop = false;
-                setTimeout(poll, delay);
+                synchronizePoll(delay);
                 return true;
             };
 
