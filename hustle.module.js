@@ -14,7 +14,7 @@
             var timeOutId;
 
             var synchronizePoll = function (pollDelay) {
-                if (isPollRunning || do_stop || timeOutId) return;
+                if (isPollRunning || timeOutId) return;
                 timeOutId = setTimeout(poll, pollDelay);
             };
 
