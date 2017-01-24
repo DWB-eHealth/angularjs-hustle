@@ -14,12 +14,12 @@
             var timeOutId;
 
             var synchronizePoll = function (pollDelay) {
-                clearTimeout(timeOutId);
-                if (isPollRunning || do_stop) return;
+                if (isPollRunning || do_stop || timeOutId) return;
                 timeOutId = setTimeout(poll, pollDelay);
             };
 
             var poll = function(options) {
+                timeOutId = undefined;
                 options = options || {};
                 if (do_stop || !hustle.is_open()) return;
                 if (coptions.enable_fn) {
